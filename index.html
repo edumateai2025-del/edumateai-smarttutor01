@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EduMateAI - Smart Tutor</title>
+<script src="https://cdn.jsdelivr.net/npm/tsparticles@2.11.1/tsparticles.min.js" defer></script>
+<style>
+/* ===== Body & Particles ===== */
+body {
+  margin:0; padding:0; font-family:'Arial', sans-serif; height:100vh;
+  color:#fff; overflow:hidden; display:flex; flex-direction:column; transition: background 0.5s;
+}
+#tsparticles { position: fixed; width:100%; height:100%; top:0; left:0; z-index:0; }
+body > * { position: relative; z-index:1; }
+
+/* ===== Day/Night Background ===== */
+body.day { background: linear-gradient(270deg,#a1c4fd,#c2e9fb); background-size:800% 800%; animation: gradientBG 15s ease infinite; }
+body.night { background: linear-gradient(270deg,#0f2027,#203a43,#2c5364); background-size:800% 800%; animation: gradientBG 15s ease infinite; }
+@keyframes gradientBG { 0%{background-position:0% 50%;}50%{background-position:100% 50%;}100%{background-position:0% 50%;} }
+
+/* ===== Day/Night Toggle ===== */
+#toggleContainer { position: fixed; top:20px; right:20px; display:flex; align-items:center; gap:10px; z-index:1000; font-size:14px; user-select:none; }
+.toggle-switch { position: relative; width:50px; height:24px; }
+.toggle-switch input { display:none; }
+.slider { position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background:#ccc; border-radius:24px; transition:0.4s; }
+.slider:before { position:absolute; content:""; height:20px; width:20px; left:2px; bottom:2px; background:white; border-radius:50%; transition:0.4s; }
+input:checked + .slider { background:#2196F3; }
+input:checked + .slider:before { transform:translateX(26px); }
+
+/* ===== Landing Typing ===== */
+#aiTypingSection { flex:1; display:flex; justify-content:center; align-items:center; text-align:center;
+padding:20px; font-size:22px; font-weight:bold; line-height:1.4; text-shadow:1px 1px 10px rgba(0,0,0,0.6); }
+
+/* ===== Results Section ===== */
+#resultsSection { display:none; flex-direction:column; gap:15px; width:90%; max-width:600px; margin:0 auto; animation: fadeIn 0.6s; }
+.section { padding:15px 20px; border-radius:12px; background:rgba(255,255,255,0.9); color:#202124; box-shadow:0 4px 15px rgba(0,0,0,0.2); transition: transform 0.3s; }
+.section:hover { transform: translateY(-5px); }
+#videosContainer { display:flex; overflow-x:auto; gap:10px; padding-bottom:5px; }
+#videosContainer div { transition: transform 0.3s; cursor:pointer; }
+#videosContainer div:hover { transform: scale(1.05); }
+
+/* ===== Search ===== */
+#searchContainer { position:fixed; bottom:20px; width:90%; max-width:600px; display:flex; gap:10px; }
+#searchInput { flex:1; padding:12px 15px; font-size:16px; border:1px solid #dfe1e5; border-radius:24px; outline:none; }
+#searchBtn, #newSearchBtn { padding:12px 20px; border:none; background:#1fa2ff; color:#fff; font-weight:bold; font-size:16px; cursor:pointer; border-radius:24px; transition: all 0.3s ease; box-shadow:0 4px 12px rgba(0,0,0,0.2); }
+#searchBtn:hover, #newSearchBtn:hover { background:#12d8fa; transform: translateY(-2px); }
+
+@keyframes fadeIn { from {opacity:0;} to {opacity:1;} }
+</style>
+</head>
+<body class="day">
+
+<!-- Particles -->
+<div id="tsparticles"></div>
+
+<!-- Day/Night Toggle -->
+<div id="toggleContainer">
+  <span>🌞/🌙</span>
+  <label class="toggle-switch">
+    <input type="checkbox" id="dayNightToggle">
+    <span class="slider"></span>
+  </label>
+</div>
+
+<!-- Landing Typing -->
+<div id="aiTypingSection"><span id="typingText"></span></div>
+
+<!-- Results Section -->
+<main id="resultsSection">
+  <div class="section" id="responseBox"><h2>AI Response</h2><div id="aiAnswer">Example AI response will appear here.</div></div>
+  <div class="section" id="videoList"><h2>Explanation Videos</h2><div id="videosContainer">Video thumbnails will appear here.</div></div>
+  <button id="newSearchBtn">New Search</button>
+</main>
+
+<!-- Search Bar -->
+<div id="searchContainer">
+  <input type="text" id="searchInput" placeholder="Type your work here...">
+  <button id="searchBtn">Send</button>
+</div>
+
+<script>
+// ===== Particles =====
+window.addEventListener('load', async () => {
+  await tsParticles.load("tsparticles", {
+    background: { color: "transparent" },
+    fpsLimit: 60,
+    particles: {
+      number: { value: 120 },
+      color: { value: ["#ffffff","#00ffcc","#ff00ff"] },
+      shape: { type: "circle" },
+      opacity: { value: 0.8 },
+      size: { value: { min: 2, max: 6 } },
+      move: { 
+        enable: true, 
+        speed: 3.5,       // faster movement
+        direction: "none", 
+        random: true,     
+        straight: false, 
+        outMode: "bounce"
+      },
+      links: { enable: true, distance: 150, color: "#ffffff", opacity: 0.25, width: 1 }
+    },
+    interactivity: {
+      events: { onHover: { enable: true, mode: "repulse" }, onClick: { enable: true, mode: "push" } },
+      modes: { repulse: { distance: 120 }, push: { quantity: 4 } }
+    },
+    detectRetina: true
+  });
+});
+
+// ===== Elements =====
+const searchInput = document.getElementById('searchInput');
+const searchBtn = document.getElementById('searchBtn');
+const resultsSection = document.getElementById('resultsSection');
+const aiAnswer = document.getElementById('aiAnswer');
+const videosContainer = document.getElementById('videosContainer');
+const aiTypingSection = document.getElementById('aiTypingSection');
+const searchContainer = document.getElementById('searchContainer');
+const newSearchBtn = document.getElementById('newSearchBtn');
+const dayNightToggle = document.getElementById('dayNightToggle');
+const body = document.body;
+const typingText = document.getElementById('typingText');
+
+// ===== Day/Night Toggle =====
+dayNightToggle.addEventListener('change',()=>{body.className=dayNightToggle.checked?'night':'day';});
+
+// ===== Landing Typing =====
+const phrases=["Hello! 🤗 I am your Smart Tutor.","I can explain your work, answer questions, and provide helpful videos...","Type your question below and let's get started!","Let's brainstorm","Let's explore"];
+let phraseIndex=0,charIndex=0,deleting=false;
+function typeLanding(){
+  const current=phrases[phraseIndex];
+  if(!deleting){
+    typingText.textContent=current.slice(0,charIndex+1);
+    charIndex++;
+    if(charIndex===current.length){ deleting=true; setTimeout(typeLanding,1500); return;}
+  } else {
+    typingText.textContent=current.slice(0,charIndex-1);
+    charIndex--;
+    if(charIndex===0){ deleting=false; phraseIndex=(phraseIndex+1)%phrases.length; }
+  }
+  setTimeout(typeLanding,deleting?50:100);
+}
+typeLanding();
+
+// ===== Fake Search Interaction =====
+searchBtn.addEventListener('click', ()=>{
+  const query = searchInput.value.trim();
+  if(!query) return;
+  aiTypingSection.style.display='none';
+  searchContainer.style.display='none';
+  resultsSection.style.display='flex';
+  aiAnswer.textContent=`You typed: "${query}" (Fake response for Step 1 demo)`;
+  videosContainer.textContent='Fake video thumbnails would appear here.';
+});
+
+newSearchBtn.addEventListener('click', ()=>{
+  resultsSection.style.display='none';
+  searchContainer.style.display='flex';
+  aiTypingSection.style.display='flex';
+  searchInput.value='';
+  aiAnswer.textContent='';
+  videosContainer.textContent='';
+});
+</script>
+</body>
+</html>
