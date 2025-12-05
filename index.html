@@ -9,17 +9,14 @@
 body {
   margin:0; padding:0; font-family:'Arial', sans-serif; height:100vh;
   color:#fff; overflow:hidden; display:flex; flex-direction:column; transition: background 0.5s;
-  background: linear-gradient(270deg,#0f2027,#203a43,#2c5364); /* Night by default */
+  background: linear-gradient(270deg,#0f2027,#203a43,#2c5364); /* default dark */
   background-size: 400% 400%;
   animation: gradientBG 15s ease infinite;
 }
 body.day {
   background: linear-gradient(270deg,#a1c4fd,#c2e9fb);
-  background-size:400% 400%;
-  animation: gradientBG 15s ease infinite;
   color:#000;
 }
-
 @keyframes gradientBG { 
   0%{background-position:0% 50%;} 
   50%{background-position:100% 50%;} 
@@ -79,13 +76,8 @@ padding:20px; font-size:22px; font-weight:bold; line-height:1.4; text-shadow:1px
 
 @keyframes fadeIn { from {opacity:0;} to {opacity:1;} }
 
-/* AI Atom Icon */
-.ai-icon { width: 45px; height: 45px; background: #4a148c; border-radius: 10px; margin: 10px auto; display: flex; justify-content: center; align-items: center; animation: pulse 1.5s infinite ease-in-out; }
-@keyframes pulse { 0% { transform: scale(1); background:#4a148c; } 50% { transform: scale(1.12); background:#7b1fa2; } 100% { transform: scale(1); background:#4a148c; } }
-.atom { width: 28px; height: 28px; border: 2px solid white; border-radius: 50%; position: relative; }
-.atom::before { content: ""; width: 8px; height: 8px; background: white; border-radius: 50%; position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); }
-.electron { width: 6px; height: 6px; background: #ff4081; border-radius: 50%; position: absolute; right: -5px; top: 50%; transform: translateY(-50%); animation: orbit 1.4s linear infinite; }
-@keyframes orbit { 0% { transform: rotate(0deg) translateX(14px); } 100% { transform: rotate(360deg) translateX(14px); } }
+/* AI Thinking animation placeholder */
+#aiThinking p { margin:5px 0; }
 </style>
 </head>
 <body class="night">
@@ -97,7 +89,7 @@ padding:20px; font-size:22px; font-weight:bold; line-height:1.4; text-shadow:1px
 <div id="toggleContainer">
   <span>🌞/🌙</span>
   <label class="toggle-switch">
-    <input type="checkbox" id="dayNightToggle" checked>
+    <input type="checkbox" id="dayNightToggle">
     <span class="slider"></span>
   </label>
 </div>
@@ -105,17 +97,17 @@ padding:20px; font-size:22px; font-weight:bold; line-height:1.4; text-shadow:1px
 <!-- Landing Typing -->
 <div id="aiTypingSection"><span id="typingText"></span></div>
 
+<!-- AI Thinking -->
+<div id="aiThinking" style="display:none; text-align:center; margin-top:10px;">
+  <p>AI is thinking...</p>
+  <p style="opacity:0.6; font-size:14px;">Just wait a sec...</p>
+</div>
+
 <!-- Results Section -->
 <main id="resultsSection">
   <div class="section" id="responseBox">
     <h2>AI Response</h2>
-    <div id="aiAnswer">
-      <div id="aiThinking" style="display:none; text-align:center; margin-top:10px;">
-        <p>AI is thinking...</p>
-        <p style="opacity:0.6; font-size:14px;">Just wait a sec...</p>
-        <div class="ai-icon"><div class="atom"><div class="electron"></div></div></div>
-      </div>
-    </div>
+    <div id="aiAnswer"></div>
   </div>
 
   <div class="section" id="videoList">
@@ -146,6 +138,7 @@ const dayNightToggle = document.getElementById('dayNightToggle');
 const body = document.body;
 const typingText = document.getElementById('typingText');
 const dotsContainer = document.getElementById('dotsContainer');
+const aiThinkingDiv = document.getElementById("aiThinking");
 
 // ===== Floating Dots =====
 const numDots = 30;
@@ -162,17 +155,17 @@ for(let i=0;i<numDots;i++){
 }
 
 // ===== Label long AI responses =====
-function labelLongResponse(text){
+function labelLongResponse(text) {
   const lines = text.split(/\n|\. /).filter(Boolean);
   let labeled = '';
-  lines.forEach((line,i)=> labeled += `${i+1}. ${line.trim()}\n`);
+  lines.forEach((line,i) => labeled += `${i+1}. ${line.trim()}\n`);
   return labeled;
 }
 
 // ===== Display AI response =====
-function typeAIResponse(text){
+function typeAIResponse(text) {
   aiAnswer.innerHTML = '';
-  text.split('\n').forEach(line=>{
+  text.split('\n').forEach(line => {
     const p = document.createElement('p');
     p.textContent = line;
     aiAnswer.appendChild(p);
@@ -214,46 +207,40 @@ searchBtn.addEventListener('click', async () => {
   aiTypingSection.style.display = 'none';
   searchContainer.style.display = 'none';
   resultsSection.style.display = 'flex';
-
   aiAnswer.innerHTML = '';
   videosContainer.innerHTML = '';
-  const aiThinkingDiv = document.getElementById("aiThinking");
   aiThinkingDiv.style.display = "block";
 
-  // Thinking dots animation
   let dots = 0;
-  const anim = setInterval(()=>{
-    aiThinkingDiv.querySelector('p').textContent = "AI is thinking" + ".".repeat(dots);
+  const anim = setInterval(() => {
     dots = (dots+1)%4;
+    aiThinkingDiv.querySelector('p').textContent = "Thinking" + ".".repeat(dots);
   },500);
 
-  try{
+  try {
     const resp = await fetch(`/api/getData?q=${encodeURIComponent(query)}`);
     const data = await resp.json();
     clearInterval(anim);
-    aiThinkingDiv.style.display="none";
+    aiThinkingDiv.style.display = "none";
 
-    // Display AI response
     const aiText = data.ai_response?.choices?.[0]?.message?.content || "No response";
     typeAIResponse(labelLongResponse(aiText));
 
-    // Display YouTube videos
     videosContainer.innerHTML = '';
     if(data.youtube_videos?.items){
-      data.youtube_videos.items.forEach(video=>{
+      data.youtube_videos.items.forEach(video => {
         const div = document.createElement('div');
         div.style.minWidth='250px';
         div.style.marginRight='10px';
-        div.onclick = ()=>window.open(`https://www.youtube.com/watch?v=${video.id.videoId}`, "_blank");
+        div.onclick = () => window.open(`https://www.youtube.com/watch?v=${video.id.videoId}`, "_blank");
         div.innerHTML = `<img src="${video.snippet.thumbnails.medium.url}" style="width:100%;border-radius:5px;">
-        <p style="font-size:14px;color:#202124;margin:5px 0 0 0;">${video.snippet.title}</p>`;
+          <p style="font-size:14px;color:#202124;margin:5px 0 0 0;">${video.snippet.title}</p>`;
         videosContainer.appendChild(div);
       });
-    } else videosContainer.textContent = "No videos found / quota exceeded.";
+    } else videosContainer.textContent="No videos found / quota exceeded.";
 
   } catch(err){
     clearInterval(anim);
-    aiThinkingDiv.style.display="none";
     aiAnswer.textContent="Failed to load data.";
     console.error(err);
   }
@@ -266,7 +253,7 @@ newSearchBtn.addEventListener('click', ()=>{
   searchInput.value='';
   aiAnswer.innerHTML='';
   videosContainer.innerHTML='';
-  document.getElementById("aiThinking").style.display="block";
+  aiThinkingDiv.style.display="block";
 });
 </script>
 </body>
