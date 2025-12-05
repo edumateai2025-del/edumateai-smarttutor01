@@ -15,6 +15,7 @@ body {
 }
 body.day {
   background: linear-gradient(270deg,#a1c4fd,#c2e9fb);
+  color:#000;
 }
 @keyframes gradientBG { 
   0%{background-position:0% 50%;} 
@@ -61,29 +62,20 @@ padding:20px; font-size:22px; font-weight:bold; line-height:1.4; text-shadow:1px
   max-height: 70vh;
   overflow-y: auto;
 }
-.section {
-  padding:15px 20px; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.2); 
-  transition: transform 0.3s, background 0.3s, color 0.3s;
-  background: rgba(255,255,255,0.9);
-  color:#202124;
-}
+.section { padding:15px 20px; border-radius:12px; background:#1c1c1c; color:#fff; box-shadow:0 4px 15px rgba(0,0,0,0.3); transition: transform 0.3s; }
 .section:hover { transform: translateY(-5px); }
-
-/* Night mode cards */
-body.night .section {
-  background: rgba(0,0,0,0.5);
-  color:#fff;
-  box-shadow:0 4px 15px rgba(255,255,255,0.1);
-}
-
-/* Videos container */
 #videosContainer { display:flex; overflow-x:auto; gap:10px; padding-bottom:5px; }
 #videosContainer div { transition: transform 0.3s; cursor:pointer; }
 #videosContainer div:hover { transform: scale(1.05); }
 
+/* Scrollbar for results */
+#resultsSection::-webkit-scrollbar { width:8px; }
+#resultsSection::-webkit-scrollbar-thumb { background:#555; border-radius:4px; }
+
 /* Search */
 #searchContainer { position:fixed; bottom:20px; width:90%; max-width:600px; display:flex; gap:10px; }
-#searchInput { flex:1; padding:12px 15px; font-size:16px; border:1px solid #dfe1e5; border-radius:24px; outline:none; }
+#searchInput { flex:1; padding:12px 15px; font-size:16px; border:1px solid #555; border-radius:24px; outline:none; background:#222; color:#fff; }
+body.day #searchInput { background:#fff; color:#000; border:1px solid #ccc; }
 #searchBtn, #newSearchBtn { padding:12px 20px; border:none; background:#1fa2ff; color:#fff; font-weight:bold; font-size:16px; cursor:pointer; border-radius:24px; transition: all 0.3s ease; box-shadow:0 4px 12px rgba(0,0,0,0.2); }
 #searchBtn:hover, #newSearchBtn:hover { background:#12d8fa; transform: translateY(-2px); }
 
@@ -96,15 +88,12 @@ body.night .section {
 .atom::before { content: ""; width: 8px; height: 8px; background: white; border-radius: 50%; position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); }
 .electron { width: 6px; height: 6px; background: #ff4081; border-radius: 50%; position: absolute; right: -5px; top: 50%; transform: translateY(-50%); animation: orbit 1.4s linear infinite; }
 @keyframes orbit { 0% { transform: rotate(0deg) translateX(14px); } 100% { transform: rotate(360deg) translateX(14px); } }
-
 </style>
 </head>
 <body class="night">
 
-<!-- Floating Dots Container -->
 <div id="dotsContainer"></div>
 
-<!-- Day/Night Toggle -->
 <div id="toggleContainer">
   <span>🌞/🌙</span>
   <label class="toggle-switch">
@@ -113,15 +102,13 @@ body.night .section {
   </label>
 </div>
 
-<!-- Landing Typing -->
 <div id="aiTypingSection"><span id="typingText"></span></div>
 
-<!-- Results Section -->
 <main id="resultsSection">
   <div class="section" id="responseBox">
     <h2>AI Response</h2>
     <div id="aiAnswer">
-      <div id="aiThinking" style="display:block; text-align:center; margin-top:10px;">
+      <div id="aiThinking" style="text-align:center; margin-top:10px;">
         <p>AI is thinking...</p>
         <p style="opacity:0.6; font-size:14px;">Just wait a sec...</p>
         <div class="ai-icon"><div class="atom"><div class="electron"></div></div></div>
@@ -131,144 +118,112 @@ body.night .section {
 
   <div class="section" id="videoList">
     <h2>Explanation Videos</h2>
-    <div id="videosContainer">Video thumbnails will appear here.</div>
+    <div id="videosContainer"></div>
   </div>
 
   <button id="newSearchBtn">New Search</button>
 </main>
 
-<!-- Search Bar -->
 <div id="searchContainer">
   <input type="text" id="searchInput" placeholder="Type your work here...">
   <button id="searchBtn">Send</button>
 </div>
 
 <script>
-// ===== Elements =====
-const searchInput = document.getElementById('searchInput');
-const searchBtn = document.getElementById('searchBtn');
-const resultsSection = document.getElementById('resultsSection');
-const aiAnswer = document.getElementById('aiAnswer');
-const videosContainer = document.getElementById('videosContainer');
-const aiTypingSection = document.getElementById('aiTypingSection');
-const searchContainer = document.getElementById('searchContainer');
-const newSearchBtn = document.getElementById('newSearchBtn');
-const dayNightToggle = document.getElementById('dayNightToggle');
-const body = document.body;
-const typingText = document.getElementById('typingText');
-const dotsContainer = document.getElementById('dotsContainer');
+// Elements
+const searchInput=document.getElementById('searchInput');
+const searchBtn=document.getElementById('searchBtn');
+const resultsSection=document.getElementById('resultsSection');
+const aiAnswer=document.getElementById('aiAnswer');
+const videosContainer=document.getElementById('videosContainer');
+const aiTypingSection=document.getElementById('aiTypingSection');
+const searchContainer=document.getElementById('searchContainer');
+const newSearchBtn=document.getElementById('newSearchBtn');
+const dayNightToggle=document.getElementById('dayNightToggle');
+const body=document.body;
+const typingText=document.getElementById('typingText');
+const dotsContainer=document.getElementById('dotsContainer');
 
-// ===== Floating Dots =====
+// Floating dots
 for(let i=0;i<30;i++){
-  const dot = document.createElement('div');
-  dot.className='dot';
-  const size = Math.random()*4+2;
-  dot.style.width=size+'px';
-  dot.style.height=size+'px';
-  dot.style.top=Math.random()*100+'%';
-  dot.style.left=Math.random()*100+'%';
+  const dot=document.createElement('div'); dot.className='dot';
+  const size=Math.random()*4+2; dot.style.width=size+'px'; dot.style.height=size+'px';
+  dot.style.top=Math.random()*100+'%'; dot.style.left=Math.random()*100+'%';
   dot.style.animationDuration=(Math.random()*10+5)+'s';
   dotsContainer.appendChild(dot);
 }
 
-// ===== Label long AI responses =====
+// Label long AI response
 function labelLongResponse(text){
-  const lines = text.split(/\n|\. /).filter(Boolean);
-  let labeled = '';
-  lines.forEach((line,i)=>labeled+=`${i+1}. ${line.trim()}\n`);
-  return labeled;
+  const lines=text.split(/\n|\. /).filter(Boolean);
+  return lines.map((l,i)=>`${i+1}. ${l.trim()}`).join('\n');
 }
 
-// ===== Display AI response =====
-function typeAIResponse(text){
-  aiAnswer.textContent='';
+// Display AI response
+function displayAIResponse(text){
+  document.getElementById("aiThinking").style.display="none";
+  aiAnswer.innerHTML='';
   text.split('\n').forEach(line=>{
-    const p=document.createElement('p');
-    p.textContent=line;
+    const p=document.createElement('p'); p.textContent=line;
     aiAnswer.appendChild(p);
   });
 }
 
-// ===== Landing Typing =====
-const phrases=["Hello! 🤗 I am your Smart Tutor.","I can explain your work, answer questions, and provide helpful videos...","Type your question below and let's get started!","Let's brainstorm","Let's explore"];
+// Display YouTube videos
+function displayVideos(items){
+  videosContainer.innerHTML='';
+  if(!items || items.length===0){ videosContainer.textContent="No videos found / quota exceeded."; return; }
+  items.forEach(video=>{
+    const div=document.createElement('div'); div.style.minWidth='250px'; div.style.marginRight='10px';
+    div.onclick=()=>window.open(`https://www.youtube.com/watch?v=${video.id.videoId}`,"_blank");
+    div.innerHTML=`<img src="${video.snippet.thumbnails.medium.url}" style="width:100%;border-radius:5px;">
+    <p style="font-size:14px;margin:5px 0 0 0;">${video.snippet.title}</p>`;
+    videosContainer.appendChild(div);
+  });
+}
+
+// Day/Night toggle
+dayNightToggle.addEventListener('change', ()=>{
+  body.className=dayNightToggle.checked ? 'night':'day';
+});
+
+// Landing typing animation
+const phrases=["Hello! 🤗 I am your Smart Tutor.","I can explain your work, answer questions, and provide helpful videos...","Type your question below and let's get started!"];
 let phraseIndex=0,charIndex=0,deleting=false;
 function typeLanding(){
-  const current = phrases[phraseIndex];
-  if(!deleting){
-    typingText.textContent=current.slice(0,charIndex+1);
-    charIndex++;
+  const current=phrases[phraseIndex];
+  if(!deleting){ typingText.textContent=current.slice(0,charIndex+1); charIndex++;
     if(charIndex===current.length){ deleting=true; setTimeout(typeLanding,1500); return; }
-  } else {
-    typingText.textContent=current.slice(0,charIndex-1);
-    charIndex--;
+  } else { typingText.textContent=current.slice(0,charIndex-1); charIndex--;
     if(charIndex===0){ deleting=false; phraseIndex=(phraseIndex+1)%phrases.length; }
   }
   setTimeout(typeLanding,deleting?50:100);
 }
 typeLanding();
 
-// ===== Day/Night Toggle =====
-dayNightToggle.addEventListener('change',()=>{
-  body.className=dayNightToggle.checked?'night':'day';
-});
+// Fetch API
+searchBtn.addEventListener('click', async ()=>{
+  const query=searchInput.value.trim(); if(!query) return;
+  aiTypingSection.style.display='none'; searchContainer.style.display='none'; resultsSection.style.display='flex';
+  document.getElementById("aiThinking").style.display="block";
 
-// ===== Serverless API Search =====
-searchBtn.addEventListener('click',async()=>{
-  const query = searchInput.value.trim();
-  if(!query) return;
-
-  aiTypingSection.style.display='none';
-  searchContainer.style.display='none';
-  resultsSection.style.display='flex';
-  aiAnswer.textContent='';
-  videosContainer.innerHTML='';
-  document.getElementById("aiThinking").style.display='block';
-
-  let dots = 0;
-  const anim = setInterval(()=>{
-    dots = (dots+1)%4;
-    aiAnswer.textContent="Thinking"+ ".".repeat(dots);
-  },500);
+  let dots=0; const anim=setInterval(()=>{ dots=(dots+1)%4; document.querySelector("#aiThinking p").textContent="AI is thinking"+ ".".repeat(dots); },500);
 
   try{
-    const resp = await fetch(`/api/getData?q=${encodeURIComponent(query)}`);
-    const data = await resp.json();
+    const resp=await fetch(`/api/getData?q=${encodeURIComponent(query)}`);
+    const data=await resp.json();
     clearInterval(anim);
-    document.getElementById("aiThinking").style.display='none';
-
-    const aiText = data.ai_response?.choices?.[0]?.message?.content || "No response";
-    typeAIResponse(labelLongResponse(aiText));
-
-    // Display YouTube videos
-    videosContainer.innerHTML='';
-    if(data.youtube_videos?.items){
-      data.youtube_videos.items.forEach(video=>{
-        const div=document.createElement('div');
-        div.style.minWidth='250px';
-        div.style.marginRight='10px';
-        div.onclick=()=>window.open(`https://www.youtube.com/watch?v=${video.id.videoId}`,"_blank");
-        div.innerHTML=`<img src="${video.snippet.thumbnails.medium.url}" style="width:100%;border-radius:5px;">
-          <p style="font-size:14px;margin:5px 0 0 0;">${video.snippet.title}</p>`;
-        videosContainer.appendChild(div);
-      });
-    } else videosContainer.textContent="No videos found / quota exceeded.";
-
-  } catch(err){
-    clearInterval(anim);
-    aiAnswer.textContent="Failed to load data.";
-    console.error(err);
-  }
+    const aiText=data.ai_response?.choices?.[0]?.message?.content || "No response";
+    displayAIResponse(labelLongResponse(aiText));
+    displayVideos(data.youtube_videos?.items);
+  } catch(err){ clearInterval(anim); displayAIResponse("Failed to load data."); console.error(err);}
 });
 
-newSearchBtn.addEventListener('click',()=>{
-  resultsSection.style.display='none';
-  searchContainer.style.display='flex';
-  aiTypingSection.style.display='flex';
-  searchInput.value='';
-  aiAnswer.textContent='';
-  videosContainer.innerHTML='';
-  document.getElementById("aiThinking").style.display='block';
+// New Search
+newSearchBtn.addEventListener('click', ()=>{
+  resultsSection.style.display='none'; searchContainer.style.display='flex'; aiTypingSection.style.display='flex';
+  searchInput.value=''; aiAnswer.innerHTML=''; videosContainer.innerHTML=''; document.getElementById("aiThinking").style.display="block";
 });
 </script>
 </body>
-  </html>
+                            </html>
