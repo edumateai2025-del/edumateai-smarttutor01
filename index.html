@@ -144,21 +144,21 @@ function typeLanding(){
 typeLanding();
 
 // ===== Real Search using serverless API =====
-searchBtn.addEventListener('click', async ()=>{
+searchBtn.addEventListener('click', async () => {
   const query = searchInput.value.trim();
   if(!query) return;
 
-  aiTypingSection.style.display='none';
-  searchContainer.style.display='none';
-  resultsSection.style.display='flex';
-  aiAnswer.textContent='';
-  videosContainer.innerHTML='';
+  aiTypingSection.style.display = 'none';
+  searchContainer.style.display = 'none';
+  resultsSection.style.display = 'flex';
+  aiAnswer.textContent = '';
+  videosContainer.innerHTML = '';
 
   // Thinking animation
-  let dots=0;
-  const anim = setInterval(()=>{
-    dots=(dots+1)%4;
-    aiAnswer.textContent="Thinking" + ".".repeat(dots);
+  let dots = 0;
+  const anim = setInterval(() => {
+    dots = (dots + 1) % 4;
+    aiAnswer.textContent = "Thinking" + ".".repeat(dots);
   }, 500);
 
   try {
@@ -169,16 +169,16 @@ searchBtn.addEventListener('click', async ()=>{
     clearInterval(anim);
 
     // Display AI response
-    aiAnswer.textContent = data.openai.choices?.[0]?.message?.content || "No response";
+    aiAnswer.textContent = data.ai_response?.choices?.[0]?.message?.content || "No response";
 
     // Display YouTube videos
     videosContainer.innerHTML = '';
-    if(data.youtube.items){
-      data.youtube.items.forEach(video=>{
+    if(data.youtube_videos?.items){
+      data.youtube_videos.items.forEach(video => {
         const div = document.createElement('div');
-        div.style.minWidth='250px';
-        div.style.marginRight='10px';
-        div.onclick = ()=>window.open(`https://www.youtube.com/watch?v=${video.id.videoId}`,"_blank");
+        div.style.minWidth = '250px';
+        div.style.marginRight = '10px';
+        div.onclick = () => window.open(`https://www.youtube.com/watch?v=${video.id.videoId}`, "_blank");
         div.innerHTML = `
           <img src="${video.snippet.thumbnails.medium.url}" style="width:100%;border-radius:5px;">
           <p style="font-size:14px;color:#202124;margin:5px 0 0 0;">${video.snippet.title}</p>
@@ -206,4 +206,5 @@ newSearchBtn.addEventListener('click', ()=>{
 });
 </script>
 </body>
-</html>
+  </html>
+  
