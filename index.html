@@ -9,15 +9,12 @@
 body {
   margin:0; padding:0; font-family:'Arial', sans-serif; height:100vh;
   color:#fff; overflow:hidden; display:flex; flex-direction:column; transition: background 0.5s;
-  background: linear-gradient(270deg,#a1c4fd,#c2e9fb);
+  background: linear-gradient(270deg,#0f2027,#203a43,#2c5364);
   background-size: 400% 400%;
   animation: gradientBG 15s ease infinite;
 }
-body.night {
-  background: linear-gradient(270deg,#0f2027,#203a43,#2c5364);
-  background-size:400% 400%;
-  animation: gradientBG 15s ease infinite;
-  color:#fff;
+body.day {
+  background: linear-gradient(270deg,#a1c4fd,#c2e9fb);
 }
 @keyframes gradientBG { 
   0%{background-position:0% 50%;} 
@@ -64,8 +61,22 @@ padding:20px; font-size:22px; font-weight:bold; line-height:1.4; text-shadow:1px
   max-height: 70vh;
   overflow-y: auto;
 }
-.section { padding:15px 20px; border-radius:12px; background:rgba(255,255,255,0.9); color:#202124; box-shadow:0 4px 15px rgba(0,0,0,0.2); transition: transform 0.3s; }
+.section {
+  padding:15px 20px; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.2); 
+  transition: transform 0.3s, background 0.3s, color 0.3s;
+  background: rgba(255,255,255,0.9);
+  color:#202124;
+}
 .section:hover { transform: translateY(-5px); }
+
+/* Night mode cards */
+body.night .section {
+  background: rgba(0,0,0,0.5);
+  color:#fff;
+  box-shadow:0 4px 15px rgba(255,255,255,0.1);
+}
+
+/* Videos container */
 #videosContainer { display:flex; overflow-x:auto; gap:10px; padding-bottom:5px; }
 #videosContainer div { transition: transform 0.3s; cursor:pointer; }
 #videosContainer div:hover { transform: scale(1.05); }
@@ -85,6 +96,7 @@ padding:20px; font-size:22px; font-weight:bold; line-height:1.4; text-shadow:1px
 .atom::before { content: ""; width: 8px; height: 8px; background: white; border-radius: 50%; position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); }
 .electron { width: 6px; height: 6px; background: #ff4081; border-radius: 50%; position: absolute; right: -5px; top: 50%; transform: translateY(-50%); animation: orbit 1.4s linear infinite; }
 @keyframes orbit { 0% { transform: rotate(0deg) translateX(14px); } 100% { transform: rotate(360deg) translateX(14px); } }
+
 </style>
 </head>
 <body class="night">
@@ -109,12 +121,10 @@ padding:20px; font-size:22px; font-weight:bold; line-height:1.4; text-shadow:1px
   <div class="section" id="responseBox">
     <h2>AI Response</h2>
     <div id="aiAnswer">
-      <div id="aiThinking" style="display:none; text-align:center; margin-top:10px;">
+      <div id="aiThinking" style="display:block; text-align:center; margin-top:10px;">
         <p>AI is thinking...</p>
         <p style="opacity:0.6; font-size:14px;">Just wait a sec...</p>
-        <div class="ai-icon">
-          <div class="atom"><div class="electron"></div></div>
-        </div>
+        <div class="ai-icon"><div class="atom"><div class="electron"></div></div></div>
       </div>
     </div>
   </div>
@@ -149,45 +159,35 @@ const typingText = document.getElementById('typingText');
 const dotsContainer = document.getElementById('dotsContainer');
 
 // ===== Floating Dots =====
-const numDots = 30;
-for(let i=0;i<numDots;i++){
+for(let i=0;i<30;i++){
   const dot = document.createElement('div');
   dot.className='dot';
   const size = Math.random()*4+2;
-  dot.style.width = size+'px';
-  dot.style.height = size+'px';
-  dot.style.top = Math.random()*100+'%';
-  dot.style.left = Math.random()*100+'%';
-  dot.style.animationDuration = (Math.random()*10+5)+'s';
+  dot.style.width=size+'px';
+  dot.style.height=size+'px';
+  dot.style.top=Math.random()*100+'%';
+  dot.style.left=Math.random()*100+'%';
+  dot.style.animationDuration=(Math.random()*10+5)+'s';
   dotsContainer.appendChild(dot);
 }
 
 // ===== Label long AI responses =====
-function labelLongResponse(text) {
+function labelLongResponse(text){
   const lines = text.split(/\n|\. /).filter(Boolean);
   let labeled = '';
-  lines.forEach((line,i) => labeled += `${i+1}. ${line.trim()}\n`);
+  lines.forEach((line,i)=>labeled+=`${i+1}. ${line.trim()}\n`);
   return labeled;
 }
 
 // ===== Display AI response =====
-function typeAIResponse(text) {
-  aiAnswer.textContent = '';
-  text.split('\n').forEach(line => {
-    const p = document.createElement('p');
-    p.textContent = line;
+function typeAIResponse(text){
+  aiAnswer.textContent='';
+  text.split('\n').forEach(line=>{
+    const p=document.createElement('p');
+    p.textContent=line;
     aiAnswer.appendChild(p);
   });
 }
-
-// ===== Day/Night Toggle =====
-dayNightToggle.addEventListener('change', () => {
-  body.className = dayNightToggle.checked ? 'night' : 'day';
-  const allTextElements = document.querySelectorAll(
-    'body, #aiTypingSection, #resultsSection, #searchContainer, .section, #videosContainer p, #aiAnswer, #typingText'
-  );
-  allTextElements.forEach(el => el.style.color = dayNightToggle.checked ? '#fff' : '#000');
-});
 
 // ===== Landing Typing =====
 const phrases=["Hello! 🤗 I am your Smart Tutor.","I can explain your work, answer questions, and provide helpful videos...","Type your question below and let's get started!","Let's brainstorm","Let's explore"];
@@ -207,44 +207,48 @@ function typeLanding(){
 }
 typeLanding();
 
+// ===== Day/Night Toggle =====
+dayNightToggle.addEventListener('change',()=>{
+  body.className=dayNightToggle.checked?'night':'day';
+});
+
 // ===== Serverless API Search =====
-searchBtn.addEventListener('click', async () => {
+searchBtn.addEventListener('click',async()=>{
   const query = searchInput.value.trim();
   if(!query) return;
 
-  aiTypingSection.style.display = 'none';
-  searchContainer.style.display = 'none';
-  resultsSection.style.display = 'flex';
-  aiAnswer.textContent = '';
-  videosContainer.innerHTML = '';
-  document.getElementById("aiThinking").style.display = "block";
+  aiTypingSection.style.display='none';
+  searchContainer.style.display='none';
+  resultsSection.style.display='flex';
+  aiAnswer.textContent='';
+  videosContainer.innerHTML='';
+  document.getElementById("aiThinking").style.display='block';
 
   let dots = 0;
-  const anim = setInterval(() => {
+  const anim = setInterval(()=>{
     dots = (dots+1)%4;
-    aiAnswer.textContent = "Thinking"+ ".".repeat(dots);
+    aiAnswer.textContent="Thinking"+ ".".repeat(dots);
   },500);
 
-  try {
+  try{
     const resp = await fetch(`/api/getData?q=${encodeURIComponent(query)}`);
     const data = await resp.json();
     clearInterval(anim);
-    document.getElementById("aiThinking").style.display = "none";
+    document.getElementById("aiThinking").style.display='none';
 
-    // Display AI response (labeled)
     const aiText = data.ai_response?.choices?.[0]?.message?.content || "No response";
     typeAIResponse(labelLongResponse(aiText));
 
     // Display YouTube videos
-    videosContainer.innerHTML = '';
+    videosContainer.innerHTML='';
     if(data.youtube_videos?.items){
-      data.youtube_videos.items.forEach(video => {
-        const div = document.createElement('div');
+      data.youtube_videos.items.forEach(video=>{
+        const div=document.createElement('div');
         div.style.minWidth='250px';
         div.style.marginRight='10px';
-        div.onclick = () => window.open(`https://www.youtube.com/watch?v=${video.id.videoId}`, "_blank");
-        div.innerHTML = `<img src="${video.snippet.thumbnails.medium.url}" style="width:100%;border-radius:5px;">
-          <p style="font-size:14px;color:#202124;margin:5px 0 0 0;">${video.snippet.title}</p>`;
+        div.onclick=()=>window.open(`https://www.youtube.com/watch?v=${video.id.videoId}`,"_blank");
+        div.innerHTML=`<img src="${video.snippet.thumbnails.medium.url}" style="width:100%;border-radius:5px;">
+          <p style="font-size:14px;margin:5px 0 0 0;">${video.snippet.title}</p>`;
         videosContainer.appendChild(div);
       });
     } else videosContainer.textContent="No videos found / quota exceeded.";
@@ -256,14 +260,14 @@ searchBtn.addEventListener('click', async () => {
   }
 });
 
-newSearchBtn.addEventListener('click', ()=>{
+newSearchBtn.addEventListener('click',()=>{
   resultsSection.style.display='none';
   searchContainer.style.display='flex';
   aiTypingSection.style.display='flex';
   searchInput.value='';
   aiAnswer.textContent='';
   videosContainer.innerHTML='';
-  document.getElementById("aiThinking").style.display="block";
+  document.getElementById("aiThinking").style.display='block';
 });
 </script>
 </body>
