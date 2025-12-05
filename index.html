@@ -9,13 +9,13 @@
 body {
   margin:0; padding:0; font-family:'Arial', sans-serif; height:100vh;
   color:#fff; overflow:hidden; display:flex; flex-direction:column; transition: background 0.5s;
-  background: linear-gradient(270deg,#0f2027,#203a43,#2c5364); /* default night */
+  background: linear-gradient(270deg,#0f2027,#203a43,#2c5364); /* Night by default */
   background-size: 400% 400%;
   animation: gradientBG 15s ease infinite;
 }
 body.day {
   background: linear-gradient(270deg,#a1c4fd,#c2e9fb);
-  background-size: 400% 400%;
+  background-size:400% 400%;
   animation: gradientBG 15s ease infinite;
   color:#000;
 }
@@ -66,7 +66,6 @@ padding:20px; font-size:22px; font-weight:bold; line-height:1.4; text-shadow:1px
   overflow-y: auto;
 }
 .section { padding:15px 20px; border-radius:12px; background:rgba(255,255,255,0.9); color:#202124; box-shadow:0 4px 15px rgba(0,0,0,0.2); transition: transform 0.3s; }
-body.night .section { background: rgba(30,30,30,0.9); color:#fff; }
 .section:hover { transform: translateY(-5px); }
 #videosContainer { display:flex; overflow-x:auto; gap:10px; padding-bottom:5px; }
 #videosContainer div { transition: transform 0.3s; cursor:pointer; }
@@ -91,6 +90,7 @@ body.night .section { background: rgba(30,30,30,0.9); color:#fff; }
 </head>
 <body class="night">
 
+<!-- Floating Dots Container -->
 <div id="dotsContainer"></div>
 
 <!-- Day/Night Toggle -->
@@ -133,6 +133,7 @@ body.night .section { background: rgba(30,30,30,0.9); color:#fff; }
 </div>
 
 <script>
+// ===== Elements =====
 const searchInput = document.getElementById('searchInput');
 const searchBtn = document.getElementById('searchBtn');
 const resultsSection = document.getElementById('resultsSection');
@@ -146,49 +147,52 @@ const body = document.body;
 const typingText = document.getElementById('typingText');
 const dotsContainer = document.getElementById('dotsContainer');
 
-// Floating dots
-for(let i=0;i<30;i++){
+// ===== Floating Dots =====
+const numDots = 30;
+for(let i=0;i<numDots;i++){
   const dot = document.createElement('div');
   dot.className='dot';
-  const size=Math.random()*4+2;
-  dot.style.width=size+'px';
-  dot.style.height=size+'px';
-  dot.style.top=Math.random()*100+'%';
-  dot.style.left=Math.random()*100+'%';
-  dot.style.animationDuration=(Math.random()*10+5)+'s';
+  const size = Math.random()*4+2;
+  dot.style.width = size+'px';
+  dot.style.height = size+'px';
+  dot.style.top = Math.random()*100+'%';
+  dot.style.left = Math.random()*100+'%';
+  dot.style.animationDuration = (Math.random()*10+5)+'s';
   dotsContainer.appendChild(dot);
 }
 
-// Label AI response
+// ===== Label long AI responses =====
 function labelLongResponse(text){
   const lines = text.split(/\n|\. /).filter(Boolean);
-  let labeled='';
-  lines.forEach((line,i)=>labeled+=`${i+1}. ${line.trim()}\n`);
+  let labeled = '';
+  lines.forEach((line,i)=> labeled += `${i+1}. ${line.trim()}\n`);
   return labeled;
 }
 
-// Display AI response
+// ===== Display AI response =====
 function typeAIResponse(text){
-  aiAnswer.textContent='';
+  aiAnswer.innerHTML = '';
   text.split('\n').forEach(line=>{
     const p = document.createElement('p');
-    p.textContent=line;
+    p.textContent = line;
     aiAnswer.appendChild(p);
   });
 }
 
-// Day/Night Toggle
-dayNightToggle.addEventListener('change',()=>{
-  body.className=dayNightToggle.checked?'night':'day';
-  document.querySelectorAll('body, #aiTypingSection, #resultsSection, #searchContainer, .section, #videosContainer p, #aiAnswer, #typingText')
-    .forEach(el=>el.style.color=dayNightToggle.checked?'#fff':'#000');
+// ===== Day/Night Toggle =====
+dayNightToggle.addEventListener('change', () => {
+  body.className = dayNightToggle.checked ? 'night' : 'day';
+  const allTextElements = document.querySelectorAll(
+    'body, #aiTypingSection, #resultsSection, #searchContainer, .section, #videosContainer p, #aiAnswer, #typingText'
+  );
+  allTextElements.forEach(el => el.style.color = dayNightToggle.checked ? '#fff' : '#000');
 });
 
-// Landing typing animation
+// ===== Landing Typing =====
 const phrases=["Hello! 🤗 I am your Smart Tutor.","I can explain your work, answer questions, and provide helpful videos...","Type your question below and let's get started!","Let's brainstorm","Let's explore"];
 let phraseIndex=0,charIndex=0,deleting=false;
 function typeLanding(){
-  const current=phrases[phraseIndex];
+  const current = phrases[phraseIndex];
   if(!deleting){
     typingText.textContent=current.slice(0,charIndex+1);
     charIndex++;
@@ -202,69 +206,68 @@ function typeLanding(){
 }
 typeLanding();
 
-// Show thinking animation
-function showThinking(){
-  aiAnswer.textContent='';
-  const thinkingDiv=document.getElementById("aiThinking");
-  thinkingDiv.style.display="block";
-  let dots=0;
-  const anim=setInterval(()=>{
-    dots=(dots+1)%4;
-    aiAnswer.textContent="Thinking"+ ".".repeat(dots);
-  },500);
-  return anim;
-}
-
-// Search click
-searchBtn.addEventListener('click', async ()=>{
-  const query=searchInput.value.trim();
+// ===== Serverless API Search =====
+searchBtn.addEventListener('click', async () => {
+  const query = searchInput.value.trim();
   if(!query) return;
-  aiTypingSection.style.display='none';
-  searchContainer.style.display='none';
-  resultsSection.style.display='flex';
-  videosContainer.innerHTML='';
 
-  const anim=showThinking();
+  aiTypingSection.style.display = 'none';
+  searchContainer.style.display = 'none';
+  resultsSection.style.display = 'flex';
+
+  aiAnswer.innerHTML = '';
+  videosContainer.innerHTML = '';
+  const aiThinkingDiv = document.getElementById("aiThinking");
+  aiThinkingDiv.style.display = "block";
+
+  // Thinking dots animation
+  let dots = 0;
+  const anim = setInterval(()=>{
+    aiThinkingDiv.querySelector('p').textContent = "AI is thinking" + ".".repeat(dots);
+    dots = (dots+1)%4;
+  },500);
 
   try{
-    const resp=await fetch(`/api/getData?q=${encodeURIComponent(query)}`);
-    const data=await resp.json();
+    const resp = await fetch(`/api/getData?q=${encodeURIComponent(query)}`);
+    const data = await resp.json();
     clearInterval(anim);
-    document.getElementById("aiThinking").style.display="none";
+    aiThinkingDiv.style.display="none";
 
-    typeAIResponse(labelLongResponse(data.ai_response?.choices?.[0]?.message?.content || "No response"));
+    // Display AI response
+    const aiText = data.ai_response?.choices?.[0]?.message?.content || "No response";
+    typeAIResponse(labelLongResponse(aiText));
 
-    // YouTube videos
-    videosContainer.innerHTML='';
+    // Display YouTube videos
+    videosContainer.innerHTML = '';
     if(data.youtube_videos?.items){
       data.youtube_videos.items.forEach(video=>{
-        const div=document.createElement('div');
+        const div = document.createElement('div');
         div.style.minWidth='250px';
         div.style.marginRight='10px';
-        div.onclick=()=>window.open(`https://www.youtube.com/watch?v=${video.id.videoId}`,"_blank");
-        div.innerHTML=`<img src="${video.snippet.thumbnails.medium.url}" style="width:100%;border-radius:5px;">
-          <p style="font-size:14px;color:#202124;margin:5px 0 0 0;">${video.snippet.title}</p>`;
+        div.onclick = ()=>window.open(`https://www.youtube.com/watch?v=${video.id.videoId}`, "_blank");
+        div.innerHTML = `<img src="${video.snippet.thumbnails.medium.url}" style="width:100%;border-radius:5px;">
+        <p style="font-size:14px;color:#202124;margin:5px 0 0 0;">${video.snippet.title}</p>`;
         videosContainer.appendChild(div);
       });
-    } else videosContainer.textContent="No videos found / quota exceeded.";
+    } else videosContainer.textContent = "No videos found / quota exceeded.";
 
   } catch(err){
     clearInterval(anim);
+    aiThinkingDiv.style.display="none";
     aiAnswer.textContent="Failed to load data.";
     console.error(err);
   }
 });
 
-// New search
 newSearchBtn.addEventListener('click', ()=>{
   resultsSection.style.display='none';
   searchContainer.style.display='flex';
   aiTypingSection.style.display='flex';
   searchInput.value='';
-  aiAnswer.textContent='';
+  aiAnswer.innerHTML='';
   videosContainer.innerHTML='';
   document.getElementById("aiThinking").style.display="block";
 });
 </script>
 </body>
-    </html>
+  </html>
